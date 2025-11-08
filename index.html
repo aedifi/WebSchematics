@@ -18,15 +18,23 @@
     <script type="module">
         import renderSchematic from './src/webschematics.js';
 
-        document.getElementById('input').addEventListener('change', (event) => {
+        document.getElementById('input').addEventListener('change', async (event) => {
             // Remove any existing canvas elements
             document.querySelectorAll('canvas').forEach((canvas) => {
                 canvas.remove();
             });
             const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
 
-            // If there is a ./resources folder on disk, use that as teh endpoint for resources, otherwise use the default
-            renderSchematic(file, document.body);
+            try {
+                // If there is a ./resources folder on disk, use that as the endpoint for resources, otherwise use the default
+                await renderSchematic(file, document.body);
+            } catch (error) {
+                console.error('Failed to render schematic:', error);
+                alert('Failed to load schematic: ' + error.message);
+            }
         });
     </script>
 </body>

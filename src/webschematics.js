@@ -2,21 +2,33 @@ import './lib/nbt.js';
 import * as pako from './lib/pako.js';
 import render from './renderer.js';
 
-let resourcesUrl = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.19.3';
+let resourcesUrl = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.10';
 export default async function renderSchematic(file, parent, resources = resourcesUrl) {
-    const nbtData = await getNbtData(file);
-    const width = nbtData.value.Width.value;
-    const height = nbtData.value.Height.value;
-    const length = nbtData.value.Length.value;
-    render(getBlocks(nbtData), width, height, length, parent, resources);
+    try {
+        const nbtData = await getNbtData(file);
+        const width = nbtData.value.Width.value;
+        const height = nbtData.value.Height.value;
+        const length = nbtData.value.Length.value;
+        await render(getBlocks(nbtData), width, height, length, parent, resources);
+    } catch (error) {
+        console.error('Error rendering schematic:', error);
+        throw error;
+    }
 }
 
 async function readFile(file) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function (event) {
-            resolve(pako.inflate(event.target.result));
-        }
+            try {
+                resolve(pako.inflate(event.target.result));
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = function (error) {
+            reject(error);
+        };
         reader.readAsArrayBuffer(file);
     });
 }
@@ -25,8 +37,10 @@ async function getNbtData(file) {
     const data = await readFile(file);
     return new Promise((resolve, reject) => {
         nbt.parse(data, function (error, data) {
-            if (error) { throw error; }
-
+            if (error) {
+                reject(error);
+                return;
+            }
             resolve(data);
         });
     });

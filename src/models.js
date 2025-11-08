@@ -101,12 +101,20 @@ async function loadTexture(textureName) {
 	}
 	// Load the URL as a texture
 	const textureLoader = new THREE.TextureLoader();
-	return new Promise((resolve) => {
-		textureLoader.load(`${resourcesUrl}/assets/minecraft/textures/${textureName}.png`, (texture) => {
-			texture.minFilter = THREE.NearestFilter;
-			texture.magFilter = THREE.NearestFilter;
-			resolve(texture);
-		});
+	return new Promise((resolve, reject) => {
+		textureLoader.load(
+			`${resourcesUrl}/assets/minecraft/textures/${textureName}.png`,
+			(texture) => {
+				texture.minFilter = THREE.NearestFilter;
+				texture.magFilter = THREE.NearestFilter;
+				resolve(texture);
+			},
+			undefined,
+			(error) => {
+				console.warn(`Failed to load texture: ${textureName}`, error);
+				reject(error);
+			}
+		);
 	});
 }
 
@@ -120,7 +128,15 @@ async function loadTextureMap(textures) {
 			textureMap[key] = textureMap[value.substring(1)];
 		} else {
 			// Otherwise, load the texture
-			textureMap[key] = await loadTexture(value);
+			try {
+				textureMap[key] = await loadTexture(value);
+			} catch (error) {
+				// If texture fails to load, create a placeholder texture
+				const placeholderTexture = new THREE.TextureLoader().load("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=");
+				placeholderTexture.minFilter = THREE.NearestFilter;
+				placeholderTexture.magFilter = THREE.NearestFilter;
+				textureMap[key] = placeholderTexture;
+			}
 		}
 	}
 	return textureMap;
