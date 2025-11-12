@@ -282,7 +282,7 @@ export default async function render(blocks, width, height, length, parent, reso
     // Add a grid at the bottom of the scene
     const gridSize = Math.max(width, length);
     const gridHelper = new THREE.GridHelper(gridSize, gridSize);
-    gridHelper.position.set((width / 2) - 0.5, -0.5, (length / 2) - 0.5);
+    gridHelper.position.set((width / 2), 0, (length / 2) - 0.5);
     scene.add(gridHelper);
 
     // Step 5: Start animation loop with FPS tracking
